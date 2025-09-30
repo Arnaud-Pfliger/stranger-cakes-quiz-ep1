@@ -317,7 +317,7 @@
             font-family: 'Bungee', cursive;
             font-size: 1.5rem;
             margin-bottom: 15px;
-            color: var(--stranger-white);
+            color: var(--stranger-violet);
             text-shadow: -1px -1px 1px #fff, 1px -1px 1px #fff, -1px 1px 1px #fff, 1px 1px 1px #fff, 0 0 10px var(--stranger-violet);
         }
         
@@ -1176,8 +1176,8 @@
             console.log("Tentative d'écoute du classement..."); // Message de débogage
 
             const playersCollection = collection(db, 'players');
-            // TEST : On retire temporairement le tri pour isoler le problème de l'index.
-            const q = query(playersCollection, limit(50));
+            // La requête finale correcte, qui demande le classement trié
+            const q = query(playersCollection, orderBy("highScore", "desc"), limit(50));
 
             const unsubscribe = onSnapshot(q, (snapshot) => {
                 console.log("Données du classement reçues avec succès !"); // Message de débogage
@@ -1307,5 +1307,4 @@
     </script>
 </body>
 </html>
-
 
