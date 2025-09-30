@@ -1,0 +1,1262 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kass Food - Stranger Cakes Le Jeu</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Bungee&family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --stranger-red: #E72727;
+            --stranger-blue: #4D9FFF;
+            --stranger-black: #0D0D0D;
+            --stranger-white: #FFFFFF;
+            --correct-green: #27ae60;
+            --stranger-violet: #9c27b0;
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            font-family: 'Montserrat', sans-serif;
+            background-color: var(--stranger-black);
+            color: var(--stranger-white);
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .game-container {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        @keyframes scanline {
+            0% { background-position: 0 0; }
+            100% { background-position: 0 100px; }
+        }
+        
+        /* Keyframes pour l'animation du titre */
+        @keyframes strangerZoom {
+            from {
+                opacity: 0;
+                transform: scale(0.8);
+                letter-spacing: 15px;
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+                letter-spacing: normal;
+            }
+        }
+        
+        .hidden {
+            display: none !important;
+        }
+
+        /* --- Écran de Démarrage --- */
+        #start-screen {
+            text-align: center;
+            z-index: 20;
+            padding: 20px;
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            box-sizing: border-box;
+        }
+        
+        #start-screen::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: linear-gradient(
+                0deg,
+                rgba(0, 0, 0, 0) 0%,
+                rgba(0, 0, 0, 0.2) 50%,
+                rgba(0, 0, 0, 0) 100%
+            );
+            background-size: 100% 4px;
+            z-index: 3;
+            pointer-events: none;
+            animation: scanline 10s linear infinite;
+        }
+        
+        #start-screen > * {
+            position: relative;
+            z-index: 2;
+        }
+
+
+        .brand-title {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: -1.5rem;
+            animation: strangerZoom 4s ease-out forwards;
+        }
+
+        .brand-line {
+            font-family: 'Archivo Black', sans-serif;
+            font-size: 6rem;
+            color: var(--stranger-blue);
+            text-shadow: 0 0 8px var(--stranger-blue);
+            line-height: 0.85;
+        }
+
+        h1.game-title {
+            font-family: 'Bungee', cursive;
+            font-size: 5rem;
+            color: var(--stranger-red);
+            text-shadow: 0 0 8px var(--stranger-red); /* Halo réduit pour une meilleure lisibilité */
+            font-weight: normal; /* La police Bungee est naturellement grasse, ceci est une tentative d'affinage */
+            margin-bottom: 20px;
+            animation: strangerZoom 4s ease-out forwards;
+        }
+
+        #game-rules {
+            max-width: 600px;
+            margin: 0 auto 30px auto;
+            font-size: 1.1rem;
+            line-height: 1.6;
+        }
+
+        #bonus-intro-text {
+            font-family: 'Bungee', cursive;
+            color: var(--stranger-violet);
+            text-shadow: -1px -1px 1px #fff, 1px -1px 1px #fff, -1px 1px 1px #fff, 1px 1px 1px #fff, 0 0 10px var(--stranger-violet);
+            font-size: 1.5rem;
+            margin-bottom: 25px;
+            margin-top: -15px;
+        }
+
+        .start-button {
+            font-family: 'Bungee', cursive;
+            font-size: 2rem;
+            padding: 15px 30px;
+            border: 3px solid var(--stranger-red);
+            background: transparent;
+            color: var(--stranger-white);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-shadow: 0 0 5px var(--stranger-red);
+        }
+
+        .start-button:hover {
+            background: var(--stranger-red);
+            box-shadow: 0 0 20px var(--stranger-red);
+        }
+        
+        .start-button:disabled {
+            background: #222;
+            border-color: #555;
+            color: #888;
+            cursor: not-allowed;
+            text-shadow: none;
+        }
+        
+        /* --- Écran de Jeu --- */
+        #game-screen {
+            width: 100%;
+            height: 100%;
+            position: relative;
+        }
+
+        #quit-game-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            z-index: 5;
+            font-family: 'Bungee', cursive;
+            font-size: 1rem;
+            padding: 10px 15px;
+            border: 2px solid var(--stranger-red);
+            background: var(--stranger-black);
+            color: var(--stranger-red);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        #quit-game-btn:hover {
+            background: var(--stranger-red);
+            color: var(--stranger-white);
+        }
+
+        #player-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: black;
+        }
+
+        #player {
+            width: 100%;
+            height: 100%;
+        }
+
+        #quiz-overlay, #quit-modal-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            box-sizing: border-box;
+            z-index: 10;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.5s ease, visibility 0.5s;
+        }
+
+        #quiz-overlay.visible, #quit-modal-overlay.visible {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        #quit-modal {
+            background: var(--stranger-black);
+            border: 2px solid var(--stranger-red);
+            padding: 40px;
+            text-align: center;
+            box-shadow: 0 0 20px var(--stranger-red);
+        }
+
+        #quit-modal h2 {
+            font-family: 'Bungee', cursive;
+            font-size: 2rem;
+            margin-top: 0;
+            color: var(--stranger-red);
+        }
+
+        #quit-modal .modal-buttons {
+            margin-top: 30px;
+            display: flex;
+            gap: 20px;
+        }
+
+        .modal-btn {
+             font-family: 'Bungee', cursive;
+            font-size: 1.2rem;
+            padding: 10px 20px;
+            border: 2px solid var(--stranger-white);
+            background: transparent;
+            color: var(--stranger-white);
+            cursor: pointer;
+        }
+
+        #confirm-quit-btn {
+            border-color: var(--stranger-red);
+            color: var(--stranger-red);
+        }
+        #confirm-quit-btn:hover {
+            background: var(--stranger-red);
+            color: var(--stranger-white);
+        }
+         #cancel-quit-btn:hover {
+            background: var(--stranger-white);
+            color: var(--stranger-black);
+        }
+
+
+        #question-container {
+            width: 90%;
+            max-width: 800px;
+            text-align: center;
+        }
+
+        #question-text {
+            font-size: 2rem;
+            margin-bottom: 30px;
+            color: var(--stranger-red);
+            text-shadow: 0 0 5px var(--stranger-red);
+            transform: scale(0.95);
+            opacity: 0;
+            transition: opacity 0.4s 0.3s ease-out, transform 0.4s 0.3s ease-out;
+        }
+
+        #quiz-overlay.visible #question-text {
+            transform: scale(1);
+            opacity: 1;
+        }
+        
+        .bonus-label {
+            display: block;
+            font-family: 'Bungee', cursive;
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+            color: var(--stranger-white);
+            text-shadow: -1px -1px 1px #fff, 1px -1px 1px #fff, -1px 1px 1px #fff, 1px 1px 1px #fff, 0 0 10px var(--stranger-violet);
+        }
+        
+        #quiz-overlay.bonus #question-text {
+            color: var(--stranger-violet);
+            text-shadow: -1px -1px 1px #fff, 1px -1px 1px #fff, -1px 1px 1px #fff, 1px 1px 1px #fff, 0 0 10px var(--stranger-violet);
+        }
+
+
+        #answers-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            width: 100%;
+        }
+
+        .answer-btn {
+            background: transparent;
+            border: 2px solid var(--stranger-white);
+            color: var(--stranger-white);
+            padding: 20px;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            width: 100%;
+        }
+
+        .answer-btn:hover {
+            background: var(--stranger-white);
+            color: var(--stranger-black);
+        }
+        
+        .answer-btn.correct {
+            background-color: var(--correct-green);
+            border-color: var(--correct-green);
+        }
+        
+        .answer-btn.incorrect {
+            background-color: var(--stranger-red);
+            border-color: var(--stranger-red);
+        }
+        
+        #timer {
+            margin-top: 20px;
+            width: 100%;
+            height: 10px;
+            background-color: rgba(255,255,255,0.3);
+        }
+
+        #timer-bar {
+            width: 100%;
+            height: 100%;
+            background-color: var(--stranger-red);
+            transition: width 0.1s linear;
+        }
+        
+        #quiz-overlay.bonus #timer-bar {
+            background-color: var(--stranger-violet);
+        }
+        
+        #score-display {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-family: 'Bungee', cursive;
+            font-size: 2rem;
+            color: var(--stranger-white);
+            text-shadow: 0 0 5px var(--stranger-red);
+            z-index: 5;
+        }
+        
+        #score-value.positive {
+            color: var(--stranger-blue);
+            text-shadow: 0 0 8px var(--stranger-blue);
+        }
+        #score-value.negative {
+            color: var(--stranger-red);
+            text-shadow: 0 0 8px var(--stranger-red);
+        }
+
+        #score-feedback {
+            position: absolute;
+            top: 80px;
+            right: 20px;
+            font-family: 'Bungee', cursive;
+            font-size: 2.5rem;
+            opacity: 0;
+            transition: all 1.5s ease-out;
+            transform: translateY(20px);
+            z-index: 5;
+            pointer-events: none;
+        }
+
+        #score-feedback.show {
+            opacity: 1;
+            transform: translateY(-20px);
+        }
+
+        #score-feedback.correct {
+            color: var(--correct-green);
+            text-shadow: 0 0 5px var(--correct-green);
+        }
+        
+        #score-feedback.incorrect {
+            color: var(--stranger-red);
+            text-shadow: 0 0 5px var(--stranger-red);
+        }
+
+
+        /* --- Écran de Fin --- */
+        #end-screen {
+            text-align: center;
+            z-index: 20;
+        }
+
+        #final-score {
+            font-size: 3rem;
+            margin-bottom: 20px;
+        }
+
+        #leaderboard-title {
+            font-family: 'Bungee', cursive;
+            color: var(--stranger-red);
+            font-size: 2.5rem;
+            margin-bottom: 15px;
+        }
+
+        #leaderboard-container {
+            max-height: 40vh; /* Add max height */
+            overflow-y: auto; /* Add scrollbar */
+            padding-right: 10px; /* Space for scrollbar */
+            scrollbar-width: thin;
+            scrollbar-color: var(--stranger-red) var(--stranger-black);
+        }
+        
+        #leaderboard {
+            list-style: none;
+            padding: 0;
+            margin: 20px 0;
+            font-size: 1.2rem;
+            width: 400px;
+        }
+        
+        #leaderboard li {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 5px;
+            border-bottom: 1px solid #333;
+        }
+
+        #leaderboard li:last-child {
+            border-bottom: none;
+        }
+
+        .rank-position {
+            flex-basis: 10%;
+            text-align: left;
+            font-family: 'Bungee', cursive;
+        }
+
+        .rank-icon {
+            flex-basis: 10%;
+            text-align: center;
+        }
+
+        .rank-icon svg {
+            width: 24px;
+            height: 24px;
+            vertical-align: middle;
+        }
+
+        .player-name {
+            flex-grow: 1;
+            text-align: left;
+            padding-left: 15px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .player-score {
+            flex-basis: 25%;
+            text-align: right;
+            font-family: 'Bungee', cursive;
+            color: var(--stranger-blue);
+        }
+
+        /* Trophy and Medal SVG Colors */
+        .trophy-gold path { fill: #ffd700; }
+        .trophy-silver path { fill: #c0c0c0; }
+        .trophy-bronze path { fill: #cd7f32; }
+        .medal-tier-1 path { fill: #E72727; }
+        .medal-tier-2 path { fill: #4D9FFF; }
+        .medal-tier-3 path { fill: #27ae60; }
+        .medal-tier-4 path { fill: #9c27b0; }
+        .medal-tier-5 path { fill: #7f8c8d; }
+
+
+        #name-input {
+            margin-top: 20px;
+            font-size: 1.5rem;
+            padding: 10px;
+            background: transparent;
+            border: 2px solid var(--stranger-white);
+            color: var(--stranger-white);
+            text-align: center;
+            width: 200px;
+        }
+
+        .restart-button {
+            margin-top: 20px;
+            font-family: 'Bungee', cursive;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            h1.game-title { 
+                font-size: 3rem;
+                /* Halo encore plus subtil sur mobile pour garantir la lisibilité */
+                text-shadow: 0 0 5px var(--stranger-red);
+            }
+            .brand-line { font-size: 4rem; }
+            .brand-title { margin-bottom: -1rem; }
+            #game-rules { font-size: 1rem; }
+            #question-text { font-size: 1.5rem; }
+            #answers-container { grid-template-columns: 1fr; }
+            .answer-btn { font-size: 1rem; padding: 15px; }
+            #leaderboard { width: 90vw; font-size: 1rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="game-container">
+
+        <!-- Écran de Démarrage -->
+        <div id="start-screen">
+            <div class="brand-title">
+                <span class="brand-line">KASS</span>
+                <span class="brand-line">FOOD</span>
+            </div>
+            <h1 class="game-title">Stranger Cakes</h1>
+            <p id="game-rules">
+                Bienvenue dans le Monde à l'Envers de la pâtisserie. À des moments clés, une question vous sera posée. Plus vous répondez bien et vite, plus votre score sera haut !<br><strong>Attention : une mauvaise réponse vous coûte des points.</strong>
+            </p>
+            <h2 id="bonus-intro-text">Questions bonus série STRANGER THINGS</h2>
+            <button id="start-game-btn" class="start-button" disabled>Chargement...</button>
+        </div>
+
+        <!-- Écran de Jeu Principal -->
+        <div id="game-screen" class="hidden">
+            <button id="quit-game-btn">Quitter</button>
+            <div id="score-display">Score: <span id="score-value">0</span></div>
+            <div id="score-feedback"></div>
+            <div id="player-container">
+                <div id="player"></div>
+            </div>
+            <div id="quiz-overlay">
+                <div id="question-container">
+                    <div id="question-text"></div>
+                    <div id="answers-container"></div>
+                    <div id="timer"><div id="timer-bar"></div></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modale de Confirmation pour quitter -->
+        <div id="quit-modal-overlay" class="hidden">
+            <div id="quit-modal">
+                <h2>Quitter la partie ?</h2>
+                <p>Si votre score est dans le top 50, vous pourrez l'enregistrer.</p>
+                <div class="modal-buttons">
+                    <button id="cancel-quit-btn" class="modal-btn">Continuer</button>
+                    <button id="confirm-quit-btn" class="modal-btn">Terminer</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Écran de Fin de Jeu -->
+        <div id="end-screen" class="hidden">
+            <h1 class="game-title">Partie Terminée</h1>
+            <p id="final-score">Votre Score: <span id="final-score-value">0</span></p>
+            
+            <div id="name-form">
+                 <input type="text" id="name-input" placeholder="VOS INITIALES" maxlength="3">
+                 <button id="save-score-btn" class="start-button restart-button">Enregistrer</button>
+            </div>
+
+            <div id="leaderboard-container" class="hidden">
+                <h2 id="leaderboard-title">Meilleurs Scores</h2>
+                <ol id="leaderboard"></ol>
+            </div>
+
+            <button id="restart-game-btn" class="start-button restart-button">Rejouer</button>
+        </div>
+
+    </div>
+
+    <script type="module">
+        // --- Import Firebase Modules ---
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, doc, getDoc, setDoc, onSnapshot, query, orderBy, limit } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // --- COLLER VOTRE CONFIGURATION FIREBASE ICI ---
+        // Remplacez cet objet par la configuration de votre projet Firebase.
+        // Vous la trouverez dans les paramètres de votre projet sur la console Firebase.
+        const userFirebaseConfig = {
+            apiKey: "VOTRE_API_KEY",
+            authDomain: "VOTRE_AUTH_DOMAIN",
+            projectId: "VOTRE_PROJECT_ID",
+            storageBucket: "VOTRE_STORAGE_BUCKET",
+            messagingSenderId: "VOTRE_MESSAGING_SENDER_ID",
+            appId: "VOTRE_APP_ID"
+        };
+        // -------------------------------------------------
+
+        // --- 1. CONFIGURATION ET DONNÉES DU JEU ---
+        const YOUTUBE_VIDEO_ID = 'uMeYFdICDHk';
+        const QUESTION_TIME_LIMIT = 15;
+        const WRONG_ANSWER_PENALTY = 160;
+        const QUESTION_COOLDOWN = 20; // Délai minimum de 20 secondes entre les questions
+
+        const quizSequences = [
+            { name: "Préparation et Ambiance", startTime: 0 },
+            { name: "Confection et Glaçage", startTime: 115 },
+            { name: "La Dégustation", startTime: 215 },
+            { name: "La Transformation et le Chaos", startTime: 412 },
+        ];
+
+        const allQuestions = [
+            // Séquence 1: Préparation et Ambiance (15 questions)
+            { id: 101, sequence: "Préparation et Ambiance", timeline: 38, question: "De quelle couleur est le collier que porte Kassandre ?", answers: ["Argenté", "Bleu", "Or et rouge", "Tout noir", "Vert émeraude"], correct: 2 },
+            { id: 102, sequence: "Préparation et Ambiance", timeline: 45, question: "La chatte qui observe la scène a une caractéristique physique très distinctive. Laquelle ?", answers: ["Son pelage est tigré", "Elle a une oreille coupée", "Ses yeux sont d'un bleu très clair", "Il lui manque une patte", "Elle est entièrement noire"], correct: 2 },
+            { id: 103, sequence: "Préparation et Ambiance", timeline: 44, question: "Combien de 'limaces alien' rouges et brillantes peut-on compter distinctement ?", answers: ["3", "4", "5", "6", "7"], correct: 2 },
+            { id: 104, sequence: "Préparation et Ambiance", timeline: 69, question: "Quel objet de décoration est posé tout en haut de l'étagère derrière Kassandre ?", answers: ["Une plante verte", "Un robot mixeur", "Une pile de livres", "Un vase", "Une fausse citrouille"], correct: 1 },
+            { id: 105, sequence: "Préparation et Ambiance", timeline: 70, question: "Qui est assis sur la chaise grise au milieu de la cuisine ?", answers: ["Personne", "Kassandre", "La chatte Birman", "Un invité surprise", "Un Démogorgon en peluche"], correct: 2 },
+            { id: 106, sequence: "Préparation et Ambiance", timeline: 81, question: "D'après Léandre, qu'est-ce que la 'Cosmic Powder' va faire au glaçage ?", answers: ["Le faire briller dans le noir", "Le faire exploser", "Lui donner un goût de noisette", "Le transformer en caramel", "Le rendre incroyablement sucré"], correct: 1 },
+            { id: 107, sequence: "Préparation et Ambiance", timeline: 85, question: "Selon Kassandre, la 'Leandre Touch' a décidé de transformer le glaçage en quoi ?", answers: ["En marmelade arc-en-ciel", "En bouillie extraterrestre", "En mare à zombie", "En gelée gluante", "En confiture démoniaque"], correct: 2 },
+            { id: 108, sequence: "Préparation et Ambiance", timeline: 87, question: "Selon Léandre, de quelle couleur est le glacis à ce moment-là ?", answers: ["Rouge", "Bleu", "Violet", "Blanc", "Noir"], correct: 2 },
+            { id: 109, sequence: "Préparation et Ambiance", timeline: 91, question: "À quelle température est le glacis lorsque Léandre dit 'normalement ça devrait être bon' ?", answers: ["35°C", "38°C", "42°C", "50°C", "100°C"], correct: 2 },
+            { id: 110, sequence: "Préparation et Ambiance", timeline: 98, question: "D'après Léandre, à quelle température le glacis devrait être ?", answers: ["35°C", "40°C", "42°C", "25°C", "Il ne dit rien"], correct: 0 },
+            { id: 111, sequence: "Préparation et Ambiance", timeline: 99, question: "D'après la phrase 'Si tu branches tes 2 neurones...', que faut-il savoir avant d'utiliser le glacis ?", answers: ["Qu'il faut le goûter", "Qu'il faut le remuer", "Qu'il faut mettre les colorants avant", "Qu'il faut le laisser refroidir", "Qu'il faut le passer au mixeur"], correct: 2 },
+            { id: 112, sequence: "Préparation et Ambiance", timeline: 105, question: "Quel animal de compagnie se frotte à Léandre lorsqu'il s'énerve ?", answers: ["Un chien", "Un serpent", "La chatte Birman", "Un furet", "Aucun"], correct: 2 },
+            { id: 113, sequence: "Préparation et Ambiance", timeline: 113, question: "En voyant les gâteaux nature, Léandre dit 'Ouais ça manque de...'. De quoi ?", answers: ["Sucre", "Chocolat", "Cosmic Powder", "Fruits", "Amour"], correct: 2 },
+            { id: 114, sequence: "Préparation et Ambiance", timeline: 67, question: "Combien de magnets sont visibles sur la porte du frigo ?", answers: ["Environ 5", "Environ 10", "Environ 15", "Environ 20", "Plus de 25"], correct: 2 },
+            { id: 115, sequence: "Préparation et Ambiance", timeline: 85, question: "Combien de flacons de colorants sont posés sur la table ?", answers: ["1", "2", "3", "4", "5"], correct: 1 },
+
+            // Séquence 2: Confection et Glaçage (15 questions)
+            { id: 201, sequence: "Confection et Glaçage", timeline: 122, question: "Juste avant de demander à Kassandre d'aller chercher le glacis, quel objet Léandre tient-il dans sa main ?", answers: ["Une spatule", "Une cuillère", "Un couteau", "Un fouet", "Son téléphone"], correct: 0 },
+            { id: 202, sequence: "Confection et Glaçage", timeline: 129, question: "De quelle couleur est le colorant que Kassandre ajoute en premier dans le pichet ?", answers: ["Bleu", "Rouge", "Vert", "Jaune", "Noir"], correct: 1 },
+            { id: 203, sequence: "Confection et Glaçage", timeline: 133, question: "Quelle est la réaction de Kassandre en voyant la couleur changer ?", answers: ["Elle rit", "Elle dit 'Whouaahh !'", "Elle applaudit", "Elle est dégoûtée", "Elle reste silencieuse"], correct: 1 },
+            { id: 204, sequence: "Confection et Glaçage", timeline: 146, question: "Quel est le nom de la chatte, tel que prononcé par Léandre ?", answers: ["Léandre Junior", "Stranger", "Cosmique", "Zombie", "Gâteau"], correct: 2 },
+            { id: 205, sequence: "Confection et Glaçage", timeline: 143, question: "Que fait la chatte Cosmique lorsque Léandre la trouve 'bizarre' ?", answers: ["Elle dort", "Elle saute de la table", "Elle se dresse sur ses pattes arrière", "Elle miaule", "Elle mange dans une gamelle"], correct: 2 },
+            { id: 206, sequence: "Confection et Glaçage", timeline: 155, question: "Léandre compare le liquide bleu à une substance. Laquelle ?", answers: ["De l'eau de mer", "De la potion magique", "De l'air liquide", "Du curaçao", "Du sang d'alien"], correct: 2 },
+            { id: 207, sequence: "Confection et Glaçage", timeline: 156, question: "En versant le glacis, Léandre crie 'On te l'a dit, c'est la...'. Complétez la phrase.", answers: ["Recette secrète", "Magie de Kassandre", "Léandre Touch", "Pâtisserie de l'horreur", "Fin du monde"], correct: 2 },
+            { id: 208, sequence: "Confection et Glaçage", timeline: 160, question: "Combien de gâteaux sont glacés sur la grille de refroidissement visible à l'écran ?", answers: ["Cinq", "Six", "Sept", "Huit", "Neuf"], correct: 1 },
+            { id: 209, sequence: "Confection et Glaçage", timeline: 192, question: "Alors que l'ambiance est encore normale, quel objet Kassandre cherche-t-elle dans les tiroirs ?", answers: ["Un couteau de cuisine", "Des couverts (cuillères)", "Une lampe de poche", "Son téléphone", "Une poêle à frire"], correct: 1 },
+            { id: 210, sequence: "Confection et Glaçage", timeline: 202, question: "En sortant les gâteaux du frigo, Léandre dit 'Le beau...'. Complétez.", answers: ["Désastre", "Gâteau", "Dessert", "Chef-d'œuvre", "Monstre"], correct: 1 },
+            { id: 211, sequence: "Confection et Glaçage", timeline: 209, question: "Quel commentaire Léandre fait-il sur l'apparence des gâteaux blancs ?", answers: ["Ils sont magnifiques", "Ils ont une sacrée tronche", "Ça a l'air délicieux", "On dirait des œufs de dinosaure", "C'est un peu raté"], correct: 1 },
+            { id: 212, sequence: "Confection et Glaçage", timeline: 214, question: "Quel autre plat Léandre sort-il du frigo 'pour terminer' ?", answers: ["Une pizza", "Des burgers", "Une salade", "Des lasagnes", "Des hot-dogs"], correct: 1 },
+            { id: 213, sequence: "Confection et Glaçage", timeline: 194, question: "Combien de bocaux en verre sont alignés sur le plan de travail près de l'évier ?", answers: ["1", "2", "3", "4", "Aucun"], correct: 2 },
+            { id: 214, sequence: "Confection et Glaçage", timeline: 193, question: "Parmi ces ustensiles, lequel n'est PAS accroché au mur de la cuisine ?", answers: ["Une passoire", "Un fouet", "Un rouleau à pâtisserie", "Une louche", "Un écumoire"], correct: 2 },
+            { id: 215, sequence: "Confection et Glaçage", timeline: 175, question: "Quel est le motif visible sur la spatule noire utilisée pour étaler de la crème sur la table ?", answers: ["Des pois", "Des rayures", "Une empreinte de patte", "Une tête de mort", "Il n'y a pas de motif"], correct: 2 },
+            
+            // Séquence 3: La Dégustation (15 questions)
+            { id: 301, sequence: "La Dégustation", timeline: 220, question: "Sur quel type de support les gâteaux 'burger' sont-ils servis pour la dégustation ?", answers: ["Une assiette blanche carrée", "Une ardoise noire rectangulaire", "Un plateau en bois de chêne", "Une grille de refroidissement", "Un plat en verre transparent"], correct: 1 },
+            { id: 302, sequence: "La Dégustation", timeline: 248, question: "Lorsque Léandre goûte l'un des Stranger Cakes blancs, que prononce-t-il après 'Ouais, il est bon' ?", answers: ["Le goût est meilleur que l'apparence.", "Franchement, c'est une drôle de texture.", "Faut pas voir ce que tu manges.", "On sent bien la myrtille, en tout cas.", "Kassandre, t'es sûre que c'est comestible ?"], correct: 2 },
+            { id: 303, sequence: "La Dégustation", timeline: 252, question: "Quelle est la première chose que Kassandre dit en goûtant le gâteau blanc ?", answers: ["C'est bon", "C'est froid", "C'est bizarre", "C'est sucré", "C'est gélifié"], correct: 1 },
+            { id: 304, sequence: "La Dégustation", timeline: 261, question: "Quel fruit Léandre dit-il 'sentir bien' en mangeant le gâteau blanc ?", answers: ["La fraise", "La myrtille", "La framboise", "La cerise", "Le cassis"], correct: 1 },
+            { id: 305, sequence: "La Dégustation", timeline: 278, question: "En mangeant les 'burgers', à quel dessert Kassandre dit-elle que cela lui fait penser ?", answers: ["À la crème brûlée", "Au tiramisu", "À la mousse au chocolat", "À une île flottante", "À de la barbe à papa"], correct: 2 },
+            { id: 306, sequence: "La Dégustation", timeline: 292, question: "À qui Léandre demande-t-il 'ça va toi ?' en caressant sa tête ?", answers: ["À Kassandre", "À la chatte Birman", "À un ami hors champ", "À lui-même", "À la caméra"], correct: 1 },
+            { id: 307, sequence: "La Dégustation", timeline: 314, question: "Que fait Léandre juste avant que Kassandre ne parte de la table ?", answers: ["Il boit de l'eau", "Il se prend la tête dans les mains", "Il regarde son téléphone", "Il mange un autre gâteau", "Il se lève brusquement"], correct: 1 },
+            { id: 308, sequence: "La Dégustation", timeline: 333, question: "Quelle est l'opinion de Léandre sur le goût du gâteau de Kassandre ?", answers: ["C'est dégoûtant", "Non, c'est pas mal", "C'est le meilleur gâteau du monde", "Ça a un goût étrange", "Il ne dit rien"], correct: 1 },
+            { id: 309, sequence: "La Dégustation", timeline: 320, question: "Quelle est la marque (logo) visible sur le polo blanc de Léandre tout au long de la vidéo ?", answers: ["Nike", "Adidas", "Calvin Klein (CK)", "Lacoste", "Ralph Lauren"], correct: 2 },
+            { id: 310, sequence: "La Dégustation", timeline: 358, question: "Que demande Kassandre à Léandre, car il la presse de manger ?", answers: ["...celui-là en particulier ?", "...depuis tout à l'heure ?", "...ce gâteau bizarre ?", "...avant que ça ne fonde ?", "...pour me transformer ?"], correct: 1 },
+            { id: 311, sequence: "La Dégustation", timeline: 385, question: "Que dit Léandre juste après que Kassandre lui annonce qu'elle n'a plus faim ?", answers: ["Finis ton assiette !", "Ça y est, tes gâteaux, là.", "Moi non plus", "Dommage, ils étaient bons", "Tu es sûre ?"], correct: 1 },
+            { id: 312, sequence: "La Dégustation", timeline: 411, question: "Quelle phrase prononce Léandre, montrant son dégoût final pour les gâteaux ?", answers: ["Je ne veux plus jamais en voir", "J'en peux plus de tes gâteaux", "C'était une mauvaise idée", "On aurait dû commander une pizza", "Mon estomac ne va pas bien"], correct: 1 },
+            { id: 313, sequence: "La Dégustation", timeline: 413, question: "Voyant Léandre ailleurs, que lui demande Kassandre ?", answers: ["... tu penses à autre chose ?", "... t'es en train de t'endormir ?", "... tu télécharges une mise à jour, là ?", "... tu as mal au ventre ?", "... tu as vu un fantôme ?"], correct: 2 },
+            { id: 314, sequence: "La Dégustation", timeline: 272, question: "De quel côté de la table (du point de vue du spectateur) Léandre est-il assis ?", answers: ["Au bout", "À gauche", "À droite", "En face", "Il est debout"], correct: 2 },
+            { id: 315, sequence: "La Dégustation", timeline: 340, question: "Que fait Léandre avec sa main droite tout en se plaignant d'un mal étrange ?", answers: ["Il se frotte les yeux", "Il se touche le cou", "Il se gratte le bras", "Il tapote sur la table", "Il tient sa cuillère"], correct: 1 },
+
+            // Séquence 4: La Transformation et le Chaos (15 questions)
+            { id: 401, sequence: "La Transformation et le Chaos", timeline: 479, question: "Quelle couleur prennent les veines qui apparaissent sur le visage de Léandre lors de sa transformation ?", answers: ["Vert vif", "Rouge sang", "Bleu électrique", "Jaune néon", "Violet foncé"], correct: 2 },
+            { id: 402, sequence: "La Transformation et le Chaos", timeline: 489, question: "Après la transformation de Léandre, quelle est la couleur dominante de l'éclairage de la cuisine ?", answers: ["Rouge vif", "Vert sombre", "Bleu profond", "Jaune pâle", "Orange intense"], correct: 2 },
+            { id: 403, sequence: "La Transformation et le Chaos", timeline: 492, question: "Que fait Léandre juste après sa transformation ?", answers: ["Il crie", "Il tombe par terre", "Il court vers Kassandre", "Il détruit la table", "Il disparaît"], correct: 1 },
+            { id: 404, sequence: "La Transformation et le Chaos", timeline: 501, question: "Quelle est la marque du lave-vaisselle visible un court instant ?", answers: ["Bosch", "Whirlpool", "Oceanic", "Siemens", "Il n'y a pas de marque visible"], correct: 2 },
+            { id: 405, sequence: "La Transformation et le Chaos", timeline: 543, question: "Quelle est la première partie du monstre que l'on voit distinctement sortir de l'ombre ?", answers: ["Ses griffes", "Sa tête qui s'ouvre", "Ses jambes", "Son dos", "Ses yeux brillants"], correct: 1 },
+            { id: 406, sequence: "La Transformation et le Chaos", timeline: 544, question: "Où se cache Kassandre pour échapper au monstre ?", answers: ["Sous la table", "Dans les escaliers / une autre pièce", "Dans le frigo", "Derrière le canapé", "Elle ne se cache pas"], correct: 1 },
+            { id: 407, sequence: "La Transformation et le Chaos", timeline: 566, question: "Quel objet voit-on en gros plan juste avant que Kassandre ne se cache dans la chambre ?", answers: ["Un téléphone", "Une poignée de porte", "Une fenêtre", "Une lampe", "Un interrupteur"], correct: 1 },
+            { id: 408, sequence: "La Transformation et le Chaos", timeline: 566, question: "Quelle forme a l'ombre du monstre projetée sur le mur ?", answers: ["Une araignée géante", "Une créature humanoïde", "Un loup-garou", "Un serpent", "On ne voit pas d'ombre"], correct: 1 },
+            { id: 409, sequence: "La Transformation et le Chaos", timeline: 577, question: "Lors de la seconde transformation de Léandre, qu'est-ce qui sort de sa bouche ?", answers: ["De la fumée", "Des crocs de vampire", "Une langue de serpent", "De la bave verte", "Rien de spécial"], correct: 1 },
+            { id: 410, sequence: "La Transformation et le Chaos", timeline: 597, question: "Quelle créature inattendue, un clin d'œil à une autre saga célèbre, apparaît brièvement à la fin ?", answers: ["Un Xénomorphe", "Un alien de 'La Guerre des Mondes'", "Un Gremlin", "Chewbacca", "Un Ewok"], correct: 1 },
+            { id: 411, sequence: "La Transformation et le Chaos", timeline: 489, question: "Quel personnage suit Kassandre lorsqu'elle fuit dans le couloir sombre ?", answers: ["Léandre", "La chatte Birman", "Sa mère", "Personne", "Le monstre"], correct: 1 },
+            { id: 412, sequence: "La Transformation et le Chaos", timeline: 557, question: "Qu'est-ce qui semble agripper le bord de la porte de la chambre où se cache Kassandre ?", answers: ["Une griffe", "Une main humaine", "Une tentacule", "Une patte de monstre", "On ne voit pas"], correct: 1 },
+            { id: 413, sequence: "La Transformation et le Chaos", timeline: 600, question: "Quel est le dernier élément visuel avant le retour du logo ?", answers: ["Kassandre qui crie", "Le monstre qui attaque", "Une explosion de fumée violette", "Un écran noir", "Le chat qui s'enfuit"], correct: 2 },
+            { id: 414, sequence: "La Transformation et le Chaos", timeline: 526, question: "Quelle action Kassandre fait-elle en passant à côté du corps de Léandre au sol ?", answers: ["Elle le secoue", "Elle l'enjambe pour fuir", "Elle essaie de le cacher", "Elle lui prend son téléphone", "Elle crie son nom"], correct: 1 },
+            { id: 415, sequence: "La Transformation et le Chaos", timeline: 575, question: "Lors de sa transformation finale en monstre bleu, combien de 'narines' ou trous sont visibles sur le 'nez' de la créature ?", answers: ["Zéro", "Une", "Deux", "Trois", "Quatre"], correct: 2 },
+        ];
+        
+        const bonusQuestions = [
+            // Séquence Bonus: Stranger Things (15 questions)
+            { id: 501, sequence: "Bonus Stranger Things", question: "Par quelle entité Will Byers est-il possédé dans la saison 2 ?", answers: ["Le Démogorgon", "Le Flagelleur Mental", "Vecna", "Le Docteur Brenner", "Un Dératiseur"], correct: 1 },
+            { id: 502, sequence: "Bonus Stranger Things", question: "Comment les personnages surnomment-ils le bébé Démogorgon de Dustin ?", answers: ["Spike", "Dart", "Rex", "Gremlins", "Babygorgo"], correct: 1 },
+            { id: 503, sequence: "Bonus Stranger Things", question: "Où se situe le portail principal vers le Monde à l'Envers dans la saison 1 ?", answers: ["Au centre commercial Starcourt", "Au laboratoire de Hawkins", "Dans la forêt de Mirkwood", "Sous la maison de Will", "Dans la cabane de Hopper"], correct: 1 },
+            { id: 504, sequence: "Bonus Stranger Things", question: "Quel personnage est célèbre pour son amour des gaufres (waffles) ?", answers: ["Mike", "Eleven (Onze)", "Lucas", "Max", "Dustin"], correct: 1 },
+            { id: 505, sequence: "Bonus Stranger Things", question: "Quel est le nom de la ville où se déroule la série ?", answers: ["Haddonfield", "Derry", "Hawkins", "Sunnydale", "Riverdale"], correct: 2 },
+            { id: 506, sequence: "Bonus Stranger Things", question: "Quelle chanson de Kate Bush joue un rôle crucial dans la saison 4 ?", answers: ["Wuthering Heights", "Running Up That Hill", "Babooshka", "This Woman's Work", "Hounds of Love"], correct: 1 },
+            { id: 507, sequence: "Bonus Stranger Things", question: "Quel jeu de rôle est au centre de la culture geek des personnages ?", answers: ["Warhammer", "Donjons et Dragons (D&D)", "Magic", "Pathfinder", "L'Appel de Cthulhu"], correct: 1 },
+            { id: 508, sequence: "Bonus Stranger Things", question: "Comment s'appelle le scientifique que Eleven nomme 'Papa' ?", answers: ["Dr. Owens", "Dr. Brenner", "Murray Bauman", "Scott Clarke", "Ted Wheeler"], correct: 1 },
+            { id: 509, sequence: "Bonus Stranger Things", question: "Dans la saison 3, quel est le nom du centre commercial ?", answers: ["Hawkins Plaza", "Starcourt Mall", "The Upside Down Mall", "Galleria of Hawkins", "The Palace Arcade"], correct: 1 },
+            { id: 510, sequence: "Bonus Stranger Things", question: "Quel est le principal pouvoir d'Eleven ?", answers: ["L'invisibilité", "La télékinésie", "Voler", "La super-vitesse", "Parler aux animaux"], correct: 1 },
+            { id: 511, sequence: "Bonus Stranger Things", question: "Comment s'appelle le salon de glaces où Steve Harrington travaille dans la saison 3 ?", answers: ["Dairy Queen", "Scoops Ahoy", "Frosty's", "Hawkins Ice", "Starcourt Creamery"], correct: 1 },
+            { id: 512, sequence: "Bonus Stranger Things", question: "Quel est le nom du groupe de metal d'Eddie Munson dans la saison 4 ?", answers: ["Metallica", "Corroded Coffin", "Iron Maiden", "Hellfire Club", "Vecna's Curse"], correct: 1 },
+            { id: 513, sequence: "Bonus Stranger Things", question: "Quel code secret les Russes utilisent-ils dans la saison 3 ?", answers: ["'Le voyage en Chine semble agréable'", "'L'aigle bleu a atterri'", "'La semaine est longue'", "'Le chat argenté fond'", "'Le magicien a perdu sa baguette'"], correct: 2 },
+            { id: 514, sequence: "Bonus Stranger Things", question: "En plus de l'eau, quel ingrédient Eleven utilise-t-elle pour amplifier ses pouvoirs dans un bain d'isolation sensorielle ?", answers: ["Du sucre", "Du sable", "Du sel", "De la farine", "De la glace"], correct: 2 },
+            { id: 515, sequence: "Bonus Stranger Things", question: "Comment s'appelait le chien de la famille Byers ?", answers: ["Chester", "Bennie", "Mews", "Vader", "Dart"], correct: 0 },
+        ];
+
+
+        // --- 2. GESTIONNAIRES D'ÉLÉMENTS DU DOM ---
+        const startScreen = document.getElementById('start-screen');
+        const gameScreen = document.getElementById('game-screen');
+        const endScreen = document.getElementById('end-screen');
+        const startGameBtn = document.getElementById('start-game-btn');
+        const scoreDisplay = document.getElementById('score-display');
+        const scoreValueSpan = document.getElementById('score-value');
+        const scoreFeedback = document.getElementById('score-feedback');
+        const quizOverlay = document.getElementById('quiz-overlay');
+        const questionText = document.getElementById('question-text');
+        const answersContainer = document.getElementById('answers-container');
+        const finalScoreDisplay = document.getElementById('final-score');
+        const finalScoreValue = document.getElementById('final-score-value');
+        const restartGameBtn = document.getElementById('restart-game-btn');
+        const timerBar = document.getElementById('timer-bar');
+        const nameForm = document.getElementById('name-form');
+        const nameInput = document.getElementById('name-input');
+        const saveScoreBtn = document.getElementById('save-score-btn');
+        const leaderboardContainer = document.getElementById('leaderboard-container');
+        const leaderboardList = document.getElementById('leaderboard');
+        const quitGameBtn = document.getElementById('quit-game-btn');
+        const quitModalOverlay = document.getElementById('quit-modal-overlay');
+        const confirmQuitBtn = document.getElementById('confirm-quit-btn');
+        const cancelQuitBtn = document.getElementById('cancel-quit-btn');
+
+        // --- 3. LOGIQUE DU JEU ---
+        let player, score, currentSequenceIndex, availableQuestions, availableBonusQuestions, timeCheckInterval, questionTimer, timeRemaining, isQuestionActive = false, audioCtx, lastQuestionTimestamp, playthroughCount = 0, bonusQuestionInterval;
+        
+        // --- Firebase variables ---
+        let db, auth, userId;
+        let isPlayerReady = false;
+        let isFirebaseReady = false;
+        let currentLeaderboardScores = [];
+
+
+        // --- YOUTUBE PLAYER SCRIPT ---
+        const tag = document.createElement('script');
+        tag.src = "https://www.youtube.com/iframe_api";
+        const firstScriptTag = document.getElementsByTagName('script')[0];
+        firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+
+        // This global function is called by the YouTube IFrame API
+        window.onYouTubeIframeAPIReady = function() {
+            player = new YT.Player('player', {
+                height: '100%', width: '100%', videoId: YOUTUBE_VIDEO_ID,
+                playerVars: { 'autoplay': 0, 'controls': 0, 'rel': 0, 'showinfo': 0, 'modestbranding': 1, 'iv_load_policy': 3 },
+                events: { 'onReady': onPlayerReady, 'onStateChange': onPlayerStateChange }
+            });
+        }
+        
+        function onPlayerReady(event) {
+            console.log("YouTube Player is ready.");
+            isPlayerReady = true;
+            checkReadyState();
+        }
+
+        // --- FIREBASE INITIALIZATION ---
+        async function initFirebase() {
+            try {
+                // Détermine quelle configuration utiliser : celle de l'environnement ou celle de l'utilisateur
+                const configToUse = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : userFirebaseConfig;
+                
+                const app = initializeApp(configToUse);
+                db = getFirestore(app);
+                auth = getAuth(app);
+
+                onAuthStateChanged(auth, (user) => {
+                    if (user) {
+                        if (!isFirebaseReady) {
+                            userId = user.uid;
+                            console.log("Firebase is ready. UserID:", userId);
+                            isFirebaseReady = true;
+                            // Call the listener ONLY after we're sure we are authenticated and ready
+                            listenForLeaderboardUpdates();
+                            checkReadyState();
+                        }
+                    }
+                });
+
+                // Gère l'authentification : token de l'environnement ou anonyme
+                await (typeof __initial_auth_token !== 'undefined' && __initial_auth_token
+                    ? signInWithCustomToken(auth, __initial_auth_token)
+                    : signInAnonymously(auth));
+
+            } catch (error) {
+                console.error("Firebase initialization failed:", error);
+                // Affiche un message d'erreur plus spécifique si la configuration par défaut est utilisée
+                if (userFirebaseConfig.apiKey === "VOTRE_API_KEY") {
+                    startGameBtn.textContent = "Configurez Firebase !";
+                    console.error("ERREUR : La configuration Firebase semble manquante ou est incorrecte. Veuillez la coller dans la variable 'userFirebaseConfig' en haut du script.");
+                } else {
+                    startGameBtn.textContent = "Erreur de chargement";
+                }
+            }
+        }
+        
+        // Call Firebase initialization on script load
+        initFirebase();
+
+
+        function checkReadyState() {
+            if (isPlayerReady && isFirebaseReady) {
+                console.log("All systems GO! Enabling start button.");
+                startGameBtn.disabled = false;
+                startGameBtn.textContent = "Commencer une partie";
+            }
+        }
+        
+        
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        }
+
+        function playNotificationSound() {
+            if (!audioCtx) return;
+            const oscillator = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            oscillator.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+            oscillator.type = 'sine';
+            oscillator.frequency.setValueAtTime(880, audioCtx.currentTime);
+            gainNode.gain.setValueAtTime(0.2, audioCtx.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.5);
+            oscillator.start(audioCtx.currentTime);
+            oscillator.stop(audioCtx.currentTime + 0.5);
+        }
+
+        function playBonusNotificationSound() {
+            if (!audioCtx) return;
+            const oscillator = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            oscillator.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+            oscillator.type = 'triangle';
+            gainNode.gain.setValueAtTime(0.2, audioCtx.currentTime);
+            oscillator.frequency.setValueAtTime(1046.50, audioCtx.currentTime); 
+            oscillator.frequency.setValueAtTime(1396.91, audioCtx.currentTime + 0.15);
+            gainNode.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 1);
+            oscillator.start(audioCtx.currentTime);
+            oscillator.stop(audioCtx.currentTime + 1);
+        }
+
+        function onPlayerStateChange(event) {
+            clearInterval(timeCheckInterval);
+            if (event.data == YT.PlayerState.PLAYING) {
+                timeCheckInterval = setInterval(checkVideoTime, 100);
+            }
+        }
+        
+        function startGame() {
+            startScreen.classList.add('hidden');
+            endScreen.classList.add('hidden');
+            gameScreen.classList.remove('hidden');
+            quitModalOverlay.classList.remove('visible');
+
+            
+            score = 0;
+            updateScoreDisplay();
+            playthroughCount++;
+            currentSequenceIndex = 0;
+            lastQuestionTimestamp = -30; // Initialize cooldown
+            
+            availableBonusQuestions = shuffleArray([...bonusQuestions]);
+            clearInterval(bonusQuestionInterval);
+            bonusQuestionInterval = setInterval(tryTriggerBonusQuestion, 20000); // Check every 20s
+
+            startSequence(currentSequenceIndex);
+        }
+
+        function startSequence(index) {
+            if (index >= quizSequences.length) {
+                endGame();
+                return;
+            }
+            currentSequenceIndex = index;
+            const sequence = quizSequences[index];
+
+            const allQuestionsForSequence = allQuestions.filter(q => q.sequence === sequence.name);
+            let eligibleQuestions = allQuestionsForSequence.filter(q => playthroughCount - q.lastAskedPlaythrough > 2);
+
+            if (eligibleQuestions.length === 0 && allQuestionsForSequence.length > 0) {
+                allQuestionsForSequence.forEach(q => q.lastAskedPlaythrough = -100);
+                eligibleQuestions = allQuestionsForSequence;
+            }
+            
+            availableQuestions = shuffleArray([...eligibleQuestions]);
+            availableQuestions.sort((a, b) => a.timeline - b.timeline);
+            
+            player.seekTo(sequence.startTime, true);
+        }
+        
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        function checkVideoTime() {
+            if (!player || typeof player.getCurrentTime !== 'function' || isQuestionActive) return;
+            
+            const currentTime = player.getCurrentTime();
+            
+            if(availableQuestions.length > 0) {
+                const nextQuestion = availableQuestions[0];
+                if (currentTime >= nextQuestion.timeline && currentTime > lastQuestionTimestamp + QUESTION_COOLDOWN) {
+                    askQuestion(nextQuestion);
+                }
+            }
+        }
+        
+        function tryTriggerBonusQuestion() {
+            const isPlaying = player && typeof player.getPlayerState === 'function' && player.getPlayerState() === YT.PlayerState.PLAYING;
+            const currentTime = player.getCurrentTime();
+
+            // 1. Check basic conditions
+            if (!isPlaying || isQuestionActive || availableBonusQuestions.length === 0) {
+                return;
+            }
+
+            // 2. Check cooldown
+            if (currentTime < lastQuestionTimestamp + QUESTION_COOLDOWN) {
+                return;
+            }
+            
+            // 3. Random chance (70% every 20 seconds)
+            if (Math.random() < 0.70) { 
+                const bonusQuestionData = availableBonusQuestions.shift();
+                askQuestion(bonusQuestionData, true);
+            }
+        }
+
+        function askQuestion(questionData, isBonus = false) {
+            isQuestionActive = true;
+            lastQuestionTimestamp = player.getCurrentTime();
+            
+            if (!isBonus) {
+                const originalQuestion = allQuestions.find(q => q.id === questionData.id);
+                if (originalQuestion) {
+                    originalQuestion.lastAskedPlaythrough = playthroughCount;
+                }
+                availableQuestions.shift(); 
+            }
+            
+            clearInterval(timeCheckInterval);
+            player.pauseVideo();
+            
+            if(isBonus) {
+                quizOverlay.classList.add('bonus');
+                playBonusNotificationSound();
+                questionText.innerHTML = `<span class="bonus-label">Question Bonus de la série Stranger Things</span>${questionData.question}`;
+            } else {
+                quizOverlay.classList.remove('bonus');
+                playNotificationSound();
+                questionText.textContent = questionData.question;
+            }
+
+            answersContainer.innerHTML = '';
+            
+            questionData.answers.forEach((answer, index) => {
+                const button = document.createElement('button');
+                button.textContent = answer;
+                button.classList.add('answer-btn');
+                button.onclick = () => handleAnswer(index, questionData.correct);
+                answersContainer.appendChild(button);
+            });
+            
+            quizOverlay.classList.add('visible');
+            startQuestionTimer();
+        }
+        
+        function startQuestionTimer() {
+            timeRemaining = QUESTION_TIME_LIMIT;
+            timerBar.style.transition = 'none';
+            timerBar.style.width = '100%';
+            
+            setTimeout(() => {
+                 timerBar.style.transition = `width ${QUESTION_TIME_LIMIT}s linear`;
+                 timerBar.style.width = '0%';
+            }, 50);
+
+            clearInterval(questionTimer);
+            questionTimer = setInterval(() => {
+                timeRemaining--;
+                if (timeRemaining < 0) handleAnswer(-1, -1);
+            }, 1000);
+        }
+
+        function handleAnswer(selectedIndex, correctIndex) {
+            clearInterval(questionTimer);
+            const buttons = answersContainer.querySelectorAll('.answer-btn');
+            
+            const continuePlayback = () => {
+                quizOverlay.classList.remove('visible', 'bonus');
+                isQuestionActive = false;
+                if (player.getPlayerState() === YT.PlayerState.PAUSED) {
+                    if (availableQuestions.length === 0) { // If no more questions in the current sequence
+                        const nextSequenceIndex = currentSequenceIndex + 1;
+                        if (nextSequenceIndex < quizSequences.length) { // If there is a next sequence
+                            startSequence(nextSequenceIndex);
+                        } else { // If it was the last sequence
+                            endGame();
+                        }
+                    } else { // If there are still questions in the sequence
+                        player.playVideo();
+                    }
+                }
+            };
+            
+            if (selectedIndex === correctIndex) {
+                const points = 100 + Math.floor(timeRemaining * (100 / QUESTION_TIME_LIMIT));
+                score += points;
+                showScoreFeedback(points);
+                buttons[selectedIndex].classList.add('correct');
+                setTimeout(continuePlayback, 2500);
+            } else {
+                score -= WRONG_ANSWER_PENALTY;
+                showScoreFeedback(-WRONG_ANSWER_PENALTY);
+                if (selectedIndex >= 0) {
+                    buttons[selectedIndex].classList.add('incorrect');
+                }
+                buttons[correctIndex].classList.add('correct');
+                setTimeout(continuePlayback, 2500);
+            }
+            
+            updateScoreDisplay();
+            buttons.forEach(btn => btn.onclick = null);
+        }
+        
+        function showScoreFeedback(points) {
+            scoreFeedback.textContent = (points > 0 ? '+' : '') + points;
+            scoreFeedback.className = 'score-feedback';
+            scoreFeedback.classList.add(points > 0 ? 'correct' : 'incorrect');
+            scoreFeedback.classList.add('show');
+            setTimeout(() => scoreFeedback.classList.remove('show'), 1500);
+        }
+        
+        function updateScoreDisplay() {
+            scoreValueSpan.textContent = score;
+            if (score < 0) {
+                scoreValueSpan.className = 'negative';
+            } else {
+                scoreValueSpan.className = 'positive';
+            }
+        }
+        
+        function endGame() {
+            clearInterval(timeCheckInterval);
+            clearInterval(bonusQuestionInterval);
+            player.stopVideo();
+            
+            gameScreen.classList.add('hidden');
+            endScreen.classList.remove('hidden');
+            nameForm.classList.remove('hidden');
+            leaderboardContainer.classList.remove('hidden'); // Show container, it will be populated by onSnapshot
+            finalScoreValue.textContent = score;
+             if (score < 0) {
+                finalScoreValue.style.color = 'var(--stranger-red)';
+            } else {
+                finalScoreValue.style.color = 'var(--stranger-blue)';
+            }
+        }
+
+        function resetToStart() {
+            clearInterval(timeCheckInterval);
+            clearInterval(bonusQuestionInterval);
+            if(player && typeof player.stopVideo === 'function') {
+                player.stopVideo();
+            }
+            
+            gameScreen.classList.add('hidden');
+            endScreen.classList.add('hidden');
+            quitModalOverlay.classList.remove('visible');
+            startScreen.classList.remove('hidden');
+        }
+        
+        async function saveScore() {
+            saveScoreBtn.disabled = true;
+            const name = nameInput.value.trim().toUpperCase() || '???';
+
+            if (!userId) {
+                console.error("User not authenticated, cannot save score.");
+                saveScoreBtn.disabled = false;
+                return;
+            }
+
+            const playerDocRef = doc(db, 'players', userId);
+
+            try {
+                const playerDoc = await getDoc(playerDocRef);
+                const currentHighScore = playerDoc.exists() ? playerDoc.data().highScore : -Infinity;
+
+                if (score > currentHighScore) {
+                    await setDoc(playerDocRef, { 
+                        name: name, 
+                        highScore: score 
+                    }, { merge: true });
+                    console.log("New high score saved!");
+                } else {
+                    if (!playerDoc.exists() || playerDoc.data().name !== name) {
+                       await setDoc(playerDocRef, { name: name }, { merge: true });
+                    }
+                    console.log("Score was not higher than the existing high score, but name was updated if changed.");
+                }
+                nameForm.classList.add('hidden');
+            } catch (error) {
+                console.error("Error saving score: ", error);
+                saveScoreBtn.disabled = false;
+            }
+        }
+        
+        function listenForLeaderboardUpdates() {
+            // This check is now robust because this function is only called when auth is ready.
+            if (!isFirebaseReady) {
+                return;
+            }
+
+            const playersCollection = collection(db, 'players');
+            const q = query(playersCollection, orderBy("highScore", "desc"), limit(50));
+
+            onSnapshot(q, (snapshot) => {
+                const scores = [];
+                snapshot.forEach((doc) => {
+                    scores.push(doc.data());
+                });
+
+                currentLeaderboardScores = scores;
+                displayLeaderboard(scores);
+            }, (error) => {
+                console.error("Firestore snapshot error:", error);
+            });
+        }
+
+        function getRankIcon(rank) {
+            const trophyPath = "M20,10 C20,0 80,0 80,10 V25 C70,35 30,35 20,25 V10 z M45,25 V55 C45,60 55,60 55,55 V25 z M35,60 H65 C70,75 60,85 50,90 C40,85 30,75 35,60 z";
+            const circlePath = "M 50,5 A 45,45 0 1 1 49.9,5 Z";
+            const starPath = "M50 5 L61 38 L98 38 L68 57 L79 90 L50 70 L21 90 L32 57 L2 38 L39 38 Z";
+            const pentagonPath = "M50 5 L95 35 L78 95 L22 95 L5 35 Z";
+            const diamondPath = "M50 5 L95 50 L50 95 L5 50 Z";
+            const squarePath = "M10 10 H 90 V 90 H 10 Z";
+
+            let iconClass = '';
+            let iconPath = '';
+
+            if (rank === 1) { iconClass = 'trophy-gold'; iconPath = trophyPath; }
+            else if (rank === 2) { iconClass = 'trophy-silver'; iconPath = trophyPath; }
+            else if (rank === 3) { iconClass = 'trophy-bronze'; iconPath = trophyPath; }
+            else if (rank <= 10) { iconClass = 'medal-tier-1'; iconPath = circlePath; }
+            else if (rank <= 20) { iconClass = 'medal-tier-2'; iconPath = starPath; }
+            else if (rank <= 30) { iconClass = 'medal-tier-3'; iconPath = pentagonPath; }
+            else if (rank <= 40) { iconClass = 'medal-tier-4'; iconPath = diamondPath; }
+            else if (rank <= 50) { iconClass = 'medal-tier-5'; iconPath = squarePath; }
+            else { return ''; }
+
+            return `<svg class="${iconClass}" viewBox="0 0 100 100"><path d="${iconPath}" /></svg>`;
+        }
+
+        function displayLeaderboard(scores) {
+            leaderboardList.innerHTML = '';
+            
+            if (scores && scores.length > 0) {
+                scores.forEach((s, index) => {
+                    const rank = index + 1;
+                    const li = document.createElement('li');
+
+                    const rankPositionHTML = `<span class="rank-position">${rank}.</span>`;
+                    const iconHTML = `<span class="rank-icon">${getRankIcon(rank)}</span>`;
+                    const nameHTML = `<span class="player-name">${s.name}</span>`;
+                    const scoreHTML = `<span class="player-score">${s.highScore}</span>`;
+                    
+                    li.innerHTML = rankPositionHTML + iconHTML + nameHTML + scoreHTML;
+                    leaderboardList.appendChild(li);
+                });
+            } else {
+                 const li = document.createElement('li');
+                 li.textContent = "Aucun score enregistré.";
+                 leaderboardList.appendChild(li);
+            }
+        }
+
+        // --- EVENT LISTENERS ---
+        startGameBtn.addEventListener('click', () => {
+            initAudio();
+            startGame();
+            player.playVideo();
+        });
+        restartGameBtn.addEventListener('click', () => {
+            // Reset form for re-play
+            saveScoreBtn.disabled = false;
+            nameInput.value = '';
+            startGame();
+            player.playVideo();
+        });
+        saveScoreBtn.addEventListener('click', saveScore);
+
+        quitGameBtn.addEventListener('click', () => {
+            player.pauseVideo();
+            quitModalOverlay.classList.add('visible');
+        });
+
+        cancelQuitBtn.addEventListener('click', () => {
+            quitModalOverlay.classList.remove('visible');
+            player.playVideo();
+        });
+
+        confirmQuitBtn.addEventListener('click', () => {
+            quitModalOverlay.classList.remove('visible');
+            
+            let isEligible = false;
+            if (currentLeaderboardScores.length < 50) {
+                isEligible = true;
+            } else {
+                const lastScore = currentLeaderboardScores[currentLeaderboardScores.length - 1].highScore;
+                if (score > lastScore) {
+                    isEligible = true;
+                }
+            }
+            
+            if (isEligible) {
+                endGame();
+            } else {
+                resetToStart();
+            }
+        });
+    </script>
+</body>
+</html>
+
