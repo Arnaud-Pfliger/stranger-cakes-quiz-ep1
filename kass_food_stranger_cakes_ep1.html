@@ -676,7 +676,7 @@
             { id: 215, sequence: "Confection et Glaçage", timeline: 175, question: "Quel est le motif visible sur la spatule noire utilisée pour étaler de la crème sur la table ?", answers: ["Des pois", "Des rayures", "Une empreinte de patte", "Une tête de mort", "Il n'y a pas de motif"], correct: 2 },
             
             // Séquence 3: La Dégustation (15 questions)
-            { id: 301, sequence: "La Dégustation", timeline: 220, question: "Sur quel type de support les gâteaux 'burger' sont-ils servis pour la dégustation ?", answers: ["Une assiette blanche carrée", "Une ardoise noire rectangulaire", "Un plateau en bois de chêne", "Une grille de refroidissement", "Un plat en verre transparent"], correct: 1 },
+            { id: 301, sequence: "La Dégustation", timeline: 220, question: "Sur quel type de support les gâteaux 'burger' sont-ils servis pour la dégustation ?", answers: ["Une assiette blanche carrée", "Une ardoise noire rectangleaire", "Un plateau en bois de chêne", "Une grille de refroidissement", "Un plat en verre transparent"], correct: 1 },
             { id: 302, sequence: "La Dégustation", timeline: 248, question: "Lorsque Léandre goûte l'un des Stranger Cakes blancs, que prononce-t-il après 'Ouais, il est bon' ?", answers: ["Le goût est meilleur que l'apparence.", "Franchement, c'est une drôle de texture.", "Faut pas voir ce que tu manges.", "On sent bien la myrtille, en tout cas.", "Kassandre, t'es sûre que c'est comestible ?"], correct: 2 },
             { id: 303, sequence: "La Dégustation", timeline: 252, question: "Quelle est la première chose que Kassandre dit en goûtant le gâteau blanc ?", answers: ["C'est bon", "C'est froid", "C'est bizarre", "C'est sucré", "C'est gélifié"], correct: 1 },
             { id: 304, sequence: "La Dégustation", timeline: 261, question: "Quel fruit Léandre dit-il 'sentir bien' en mangeant le gâteau blanc ?", answers: ["La fraise", "La myrtille", "La framboise", "La cerise", "Le cassis"], correct: 1 },
@@ -938,7 +938,8 @@
             
             if(availableQuestions.length > 0) {
                 const nextQuestion = availableQuestions[0];
-                if (currentTime >= nextQuestion.timeline && currentTime > lastQuestionTimestamp + QUESTION_COOLDOWN) {
+                // Correction : Le cooldown ne doit pas bloquer les questions prévues dans la timeline.
+                if (currentTime >= nextQuestion.timeline) {
                     askQuestion(nextQuestion);
                 }
             }
@@ -1163,6 +1164,15 @@
                 displayLeaderboard(scores);
             }, (error) => {
                 console.error("Firestore snapshot error:", error);
+                // On suppose que toute erreur de lecture du classement est due à l'index manquant.
+                // C'est la cause la plus probable pour cette requête spécifique.
+                console.error("--- ACTION REQUISE ---");
+                console.error("Le jeu ne peut pas démarrer car un Index est manquant dans votre base de données Firebase.");
+                console.error("Veuillez créer manuellement un index pour la collection 'players' sur le champ 'highScore' (Décroissant).");
+                
+                startGameBtn.textContent = "Index Firebase Manquant !";
+                startGameBtn.disabled = true; // Garder le bouton désactivé
+                startGameBtn.style.fontSize = "1.5rem"; // Réduire la taille pour que le texte rentre
             });
         }
 
