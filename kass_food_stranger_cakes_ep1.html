@@ -212,7 +212,7 @@
             height: 100%;
         }
 
-        #quiz-overlay, #quit-modal-overlay {
+        #quiz-overlay, #quit-modal-overlay, #firebase-error-overlay {
             position: absolute;
             top: 0;
             left: 0;
@@ -231,24 +231,29 @@
             transition: opacity 0.5s ease, visibility 0.5s;
         }
 
-        #quiz-overlay.visible, #quit-modal-overlay.visible {
+        #quiz-overlay.visible, #quit-modal-overlay.visible, #firebase-error-overlay.visible {
             opacity: 1;
             visibility: visible;
         }
         
-        #quit-modal {
+        #quit-modal, #firebase-error-modal {
             background: var(--stranger-black);
             border: 2px solid var(--stranger-red);
             padding: 40px;
             text-align: center;
             box-shadow: 0 0 20px var(--stranger-red);
+            max-width: 500px;
         }
 
-        #quit-modal h2 {
+        #quit-modal h2, #firebase-error-modal h2 {
             font-family: 'Bungee', cursive;
             font-size: 2rem;
             margin-top: 0;
             color: var(--stranger-red);
+        }
+        
+         #firebase-error-modal p {
+            line-height: 1.6;
         }
 
         #quit-modal .modal-buttons {
@@ -266,6 +271,11 @@
             color: var(--stranger-white);
             cursor: pointer;
         }
+        
+        #close-error-modal-btn {
+            margin-top: 20px;
+        }
+
 
         #confirm-quit-btn {
             border-color: var(--stranger-red);
@@ -587,6 +597,16 @@
             </div>
         </div>
         
+         <!-- Modale d'Erreur Firebase -->
+        <div id="firebase-error-overlay" class="hidden">
+            <div id="firebase-error-modal">
+                <h2>Erreur de Connexion</h2>
+                <p>Le jeu n'a pas pu charger le classement. La cause est probablement un <strong>index manquant</strong> sur Firebase.</p>
+                <p>Veuillez vérifier sur votre console Firebase que vous avez bien créé un index "Champ unique" pour la collection <strong>players</strong> sur le champ <strong>highScore</strong> avec l'option <strong>Décroissant</strong> activée.</p>
+                <button id="close-error-modal-btn" class="modal-btn">J'ai compris</button>
+            </div>
+        </div>
+        
         <!-- Écran de Fin de Jeu -->
         <div id="end-screen" class="hidden">
             <h1 class="game-title">Partie Terminée</h1>
@@ -754,6 +774,9 @@
         const quitModalOverlay = document.getElementById('quit-modal-overlay');
         const confirmQuitBtn = document.getElementById('confirm-quit-btn');
         const cancelQuitBtn = document.getElementById('cancel-quit-btn');
+        const firebaseErrorOverlay = document.getElementById('firebase-error-overlay');
+        const closeErrorModalBtn = document.getElementById('close-error-modal-btn');
+
 
         // --- 3. LOGIQUE DU JEU ---
         let player, score, currentSequenceIndex, availableQuestions, availableBonusQuestions, timeCheckInterval, questionTimer, timeRemaining, isQuestionActive = false, audioCtx, lastQuestionTimestamp, playthroughCount = 0, bonusQuestionInterval;
@@ -804,7 +827,7 @@
                             isFirebaseReady = true;
                             // Call the listener ONLY after we're sure we are authenticated and ready
                             listenForLeaderboardUpdates();
-                            checkReadyState();
+                            // checkReadyState is now called inside listenForLeaderboardUpdates after the first successful read
                         }
                     }
                 });
@@ -938,8 +961,8 @@
             
             if(availableQuestions.length > 0) {
                 const nextQuestion = availableQuestions[0];
-                // Correction : Le cooldown ne doit pas bloquer les questions prévues dans la timeline.
-                if (currentTime >= nextQuestion.timeline) {
+                // On s'assure qu'il y a un délai minimum entre les questions pour la stabilité
+                if (currentTime >= nextQuestion.timeline && currentTime > lastQuestionTimestamp + QUESTION_COOLDOWN) {
                     askQuestion(nextQuestion);
                 }
             }
@@ -1146,7 +1169,6 @@
         }
         
         function listenForLeaderboardUpdates() {
-            // This check is now robust because this function is only called when auth is ready.
             if (!isFirebaseReady) {
                 return;
             }
@@ -1154,7 +1176,7 @@
             const playersCollection = collection(db, 'players');
             const q = query(playersCollection, orderBy("highScore", "desc"), limit(50));
 
-            onSnapshot(q, (snapshot) => {
+            const unsubscribe = onSnapshot(q, (snapshot) => {
                 const scores = [];
                 snapshot.forEach((doc) => {
                     scores.push(doc.data());
@@ -1162,17 +1184,14 @@
 
                 currentLeaderboardScores = scores;
                 displayLeaderboard(scores);
+                
+                // Si la lecture réussit, on peut enfin activer le bouton de démarrage.
+                checkReadyState();
+                
             }, (error) => {
                 console.error("Firestore snapshot error:", error);
-                // On suppose que toute erreur de lecture du classement est due à l'index manquant.
-                // C'est la cause la plus probable pour cette requête spécifique.
-                console.error("--- ACTION REQUISE ---");
-                console.error("Le jeu ne peut pas démarrer car un Index est manquant dans votre base de données Firebase.");
-                console.error("Veuillez créer manuellement un index pour la collection 'players' sur le champ 'highScore' (Décroissant).");
-                
-                startGameBtn.textContent = "Index Firebase Manquant !";
-                startGameBtn.disabled = true; // Garder le bouton désactivé
-                startGameBtn.style.fontSize = "1.5rem"; // Réduire la taille pour que le texte rentre
+                // AFFICHE LA MODALE D'ERREUR
+                firebaseErrorOverlay.classList.add('visible');
             });
         }
 
@@ -1246,6 +1265,10 @@
         cancelQuitBtn.addEventListener('click', () => {
             quitModalOverlay.classList.remove('visible');
             player.playVideo();
+        });
+        
+        closeErrorModalBtn.addEventListener('click', () => {
+            firebaseErrorOverlay.classList.remove('visible');
         });
 
         confirmQuitBtn.addEventListener('click', () => {
