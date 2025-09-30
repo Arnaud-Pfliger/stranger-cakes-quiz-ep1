@@ -1172,11 +1172,15 @@
             if (!isFirebaseReady) {
                 return;
             }
+            
+            console.log("Tentative d'écoute du classement..."); // Message de débogage
 
             const playersCollection = collection(db, 'players');
-            const q = query(playersCollection, orderBy("highScore", "desc"), limit(50));
+            // TEST : On retire temporairement le tri pour isoler le problème de l'index.
+            const q = query(playersCollection, limit(50));
 
             const unsubscribe = onSnapshot(q, (snapshot) => {
+                console.log("Données du classement reçues avec succès !"); // Message de débogage
                 const scores = [];
                 snapshot.forEach((doc) => {
                     scores.push(doc.data());
@@ -1189,7 +1193,8 @@
                 checkReadyState();
                 
             }, (error) => {
-                console.error("Firestore snapshot error:", error);
+                console.error("Erreur de lecture Firestore:", error);
+                console.log("Le rappel d'erreur a été déclenché. Affichage de la modale."); // Message de débogage
                 // AFFICHE LA MODALE D'ERREUR
                 firebaseErrorOverlay.classList.add('visible');
             });
@@ -1302,4 +1307,5 @@
     </script>
 </body>
 </html>
+
 
