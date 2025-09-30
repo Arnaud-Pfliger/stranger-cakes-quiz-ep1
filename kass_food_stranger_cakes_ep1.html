@@ -631,7 +631,7 @@
         const YOUTUBE_VIDEO_ID = 'uMeYFdICDHk';
         const QUESTION_TIME_LIMIT = 15;
         const WRONG_ANSWER_PENALTY = 160;
-        const QUESTION_COOLDOWN = 20; // Délai minimum de 20 secondes entre les questions
+        const QUESTION_COOLDOWN = 15; // Délai minimum de 15 secondes entre les questions
 
         const quizSequences = [
             { name: "Préparation et Ambiance", startTime: 0 },
@@ -1245,9 +1245,12 @@
             if (currentLeaderboardScores.length < 50) {
                 isEligible = true;
             } else {
-                const lastScore = currentLeaderboardScores[currentLeaderboardScores.length - 1].highScore;
-                if (score > lastScore) {
-                    isEligible = true;
+                // S'assure qu'il y a bien un score à comparer
+                if (currentLeaderboardScores.length > 0) {
+                    const lastScore = currentLeaderboardScores[currentLeaderboardScores.length - 1].highScore;
+                    if (score >= lastScore) { // Correction: permettre le score égal
+                        isEligible = true;
+                    }
                 }
             }
             
@@ -1260,7 +1263,4 @@
     </script>
 </body>
 </html>
-" and the user is asking to integrate a leaderboard. This feature has already been implemented in the file in the canvas. I need to inform the user about this.
-
-I will ask the user to select the code he wants to modify.
 
