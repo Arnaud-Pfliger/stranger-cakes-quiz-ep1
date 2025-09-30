@@ -917,8 +917,8 @@
                 eligibleQuestions = allQuestionsForSequence;
             }
             
-            availableQuestions = shuffleArray([...eligibleQuestions]);
-            availableQuestions.sort((a, b) => a.timeline - b.timeline);
+            // Mélange les questions éligibles, puis les trie par ordre d'apparition
+            availableQuestions = shuffleArray([...eligibleQuestions]).sort((a, b) => a.timeline - b.timeline);
             
             player.seekTo(sequence.startTime, true);
         }
@@ -1242,13 +1242,19 @@
             quitModalOverlay.classList.remove('visible');
             
             let isEligible = false;
+
+            // Scénario 1 : Le classement n'est pas plein (moins de 50 scores). Le joueur est toujours éligible.
             if (currentLeaderboardScores.length < 50) {
                 isEligible = true;
-            } else {
-                // S'assure qu'il y a bien un score à comparer
-                if (currentLeaderboardScores.length > 0) {
-                    const lastScore = currentLeaderboardScores[currentLeaderboardScores.length - 1].highScore;
-                    if (score >= lastScore) { // Correction: permettre le score égal
+            } 
+            // Scénario 2 : Le classement est plein. Il faut comparer les scores.
+            else {
+                // On s'assure que le classement existe et contient des données valides.
+                const lastPlayer = currentLeaderboardScores[currentLeaderboardScores.length - 1];
+                if (lastPlayer && typeof lastPlayer.highScore === 'number') {
+                    const lastScoreInLeaderboard = lastPlayer.highScore;
+                    // Le score est éligible s'il est supérieur ou égal au dernier score du classement.
+                    if (score >= lastScoreInLeaderboard) {
                         isEligible = true;
                     }
                 }
