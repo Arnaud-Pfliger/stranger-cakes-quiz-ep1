@@ -617,13 +617,13 @@
         // Remplacez cet objet par la configuration de votre projet Firebase.
         // Vous la trouverez dans les paramètres de votre projet sur la console Firebase.
         const firebaseConfig = {
-        apiKey: "AIzaSyBBYFaHSN_y_bnAXsWvLxcZPgwAyXd4Yxs",
-        authDomain: "stranger-cakes-episode-1.firebaseapp.com",
-        projectId: "stranger-cakes-episode-1",
-        storageBucket: "stranger-cakes-episode-1.firebasestorage.app",
-        messagingSenderId: "665395533419",
-        appId: "1:665395533419:web:e2f16dacb1920d7e27832e",
-        measurementId: "G-NRFQCYGXKQ"
+            apiKey: "AIzaSyBBYFaHSN_y_bnAXsWvLxcZPgwAyXd4Yxs",
+            authDomain: "stranger-cakes-episode-1.firebaseapp.com",
+            projectId: "stranger-cakes-episode-1",
+            storageBucket: "stranger-cakes-episode-1.appspot.com",
+            messagingSenderId: "665395533419",
+            appId: "1:665395533419:web:e2f16dacb1920d7e27832e",
+            measurementId: "G-NRFQCYGXKQ"
         };
         // -------------------------------------------------
 
@@ -790,7 +790,7 @@
         async function initFirebase() {
             try {
                 // Détermine quelle configuration utiliser : celle de l'environnement ou celle de l'utilisateur
-                const configToUse = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : userFirebaseConfig;
+                const configToUse = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : firebaseConfig;
                 
                 const app = initializeApp(configToUse);
                 db = getFirestore(app);
@@ -817,9 +817,9 @@
             } catch (error) {
                 console.error("Firebase initialization failed:", error);
                 // Affiche un message d'erreur plus spécifique si la configuration par défaut est utilisée
-                if (userFirebaseConfig.apiKey === "VOTRE_API_KEY") {
+                if (firebaseConfig.apiKey === "VOTRE_API_KEY") {
                     startGameBtn.textContent = "Configurez Firebase !";
-                    console.error("ERREUR : La configuration Firebase semble manquante ou est incorrecte. Veuillez la coller dans la variable 'userFirebaseConfig' en haut du script.");
+                    console.error("ERREUR : La configuration Firebase semble manquante ou est incorrecte. Veuillez la coller dans la variable 'firebaseConfig' en haut du script.");
                 } else {
                     startGameBtn.textContent = "Erreur de chargement";
                 }
